@@ -604,7 +604,7 @@
         <div class="glass auth-card">
             <h2 class="gradient-text">SIH Idea Hub</h2>
             <p>Welcome! Please enter your name to continue.</p>
-            <form id="login-form" onsubmit="handleLogin(event)">
+            <form id="login-form">
                 <div class="input-group">
                     <input type="text" id="username-input" placeholder="Your Name" required autocomplete="off">
                 </div>
@@ -751,7 +751,7 @@
         }
 
         // Auth Functions
-        async function handleLogin(e) {
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const name = usernameInput.value.trim();
             if (!name) return;
@@ -782,7 +782,7 @@
                 console.error("Login error:", err);
                 showToast("Error during login", "error");
             }
-        }
+        });
 
         logoutBtn.addEventListener('click', () => {
             currentUser = '';
