@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIH Idea Hub</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-dark: #0f0c29;
+            --bg-mid: #302b63;
+            --bg-light: #24243e;
+            --accent-start: #ff6b6b;
+            --accent-end: #6c5ce7;
+            --text-main: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.7);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --font-main: 'Inter', sans-serif;
+            --font-head: 'Outfit', sans-serif;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background: linear-gradient(135deg, var(--bg-dark), var(--bg-mid), var(--bg-light));
+            background-attachment: fixed;
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-head);
+            font-weight: 700;
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, var(--accent-start), var(--accent-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-radius: 16px;
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 12, 41, 0.6);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-family: var(--font-head);
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .user-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* Buttons */
+        .btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 0.5rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: var(--font-main);
+            font-weight: 500;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            border: none;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #ff8787, #8073eb);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+        }
+
+        /* Auth Screen */
+        #auth-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: inherit;
+        }
+
+        .auth-card {
+            padding: 3rem;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .auth-card h2 {
+            margin-bottom: 0.5rem;
+            font-size: 2rem;
+        }
+
+        .auth-card p {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: white;
+            font-family: var(--font-main);
+            font-size: 1rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .input-group input:focus, .input-group textarea:focus {
+            border-color: var(--accent-end);
+            box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.3);
+        }
+
+        /* Main Content */
+        #app-content {
+            display: none;
+            padding-top: 5rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Hero */
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Podium */
+        .podium-section {
+            margin: 4rem 0;
+            text-align: center;
+        }
+
+        .podium-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .podium-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 1.5rem;
+            height: 350px;
+            margin-bottom: 4rem;
+        }
+
+        .podium-item {
+            width: 300px;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .podium-item:hover {
+            transform: translateY(-10px);
+        }
+
+        .podium-rank {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2.5rem;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));
+            z-index: 10;
+        }
+
+        .podium-card {
+            height: 100%;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .rank-1 .podium-card {
+            height: 280px;
+            border-color: #ffd700;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+            background: linear-gradient(180deg, rgba(255, 215, 0, 0.1) 0%, var(--glass-bg) 100%);
+        }
+
+        .rank-2 .podium-card {
+            height: 240px;
+            border-color: #c0c0c0;
+            box-shadow: 0 0 20px rgba(192, 192, 192, 0.2);
+        }
+
+        .rank-3 .podium-card {
+            height: 200px;
+            border-color: #cd7f32;
+            box-shadow: 0 0 20px rgba(205, 127, 50, 0.2);
+        }
+
+        .podium-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .podium-votes {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent-start);
+        }
+
+        /* Charts */
+        .charts-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 5rem;
+        }
+
+        .chart-card {
+            padding: 1.5rem;
+            height: 400px;
+        }
+
+        .chart-card h3 {
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 90%;
+            width: 100%;
+        }
+
+        /* Ideas Grid */
+        .ideas-section {
+            margin-bottom: 5rem;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .ideas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .idea-card {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .idea-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(to right, var(--accent-start), var(--accent-end));
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .idea-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+        }
+
+        .idea-card:hover::before {
+            opacity: 1;
+        }
+
+        .idea-title {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .idea-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+
+        .idea-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .author {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .vote-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: var(--transition);
+        }
+
+        .vote-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .vote-btn.voted {
+            background: rgba(255, 107, 107, 0.2);
+            border-color: var(--accent-start);
+            color: var(--accent-start);
+        }
+
+        .vote-btn.voted i {
+            animation: heartbeat 1.5s infinite;
+        }
+
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            14% { transform: scale(1.3); }
+            28% { transform: scale(1); }
+            42% { transform: scale(1.3); }
+            70% { transform: scale(1); }
+        }
+
+        /* FAB & Modal */
+        .fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            color: white;
+            border: none;
+            box-shadow: 0 4px 20px rgba(255, 107, 107, 0.5);
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .fab:hover {
+            transform: scale(1.1) rotate(90deg);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 3000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-card {
+            width: 100%;
+            max-width: 500px;
+            padding: 2rem;
+            transform: translateY(20px) scale(0.95);
+            transition: var(--transition);
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: white;
+        }
+
+        /* Toasts */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 4000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .toast {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            animation: slideUpFade 0.3s ease-out forwards;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Loading Skeletons */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            .podium-container {
+                flex-direction: column;
+                align-items: center;
+                height: auto;
+                gap: 2rem;
+            }
+            .podium-item {
+                width: 100%;
+                max-width: 350px;
+            }
+            .rank-1, .rank-2, .rank-3 { order: unset; }
+            .rank-1 .podium-card, .rank-2 .podium-card, .rank-3 .podium-card { height: auto; min-height: 150px;}
+            .podium-rank { top: -20px; left: 20px; transform: none; }
+        }
+
+        @media (max-width: 600px) {
+            .hero h1 { font-size: 2.5rem; }
+            .container { padding: 1rem; }
+            header { padding: 1rem; }
+            .ideas-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Auth Screen -->
+    <div id="auth-screen">
+        <div class="glass auth-card">
+            <h2 class="gradient-text">SIH Idea Hub</h2>
+            <p>Welcome! Please enter your name to continue.</p>
+            <form id="login-form">
+                <div class="input-group">
+                    <input type="text" id="username-input" placeholder="Your Name" required autocomplete="off">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Enter</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app-content">
+        <header>
+            <div class="logo">
+                <i class="fa-solid fa-lightbulb" style="color: var(--accent-start);"></i>
+                <span class="gradient-text">Idea Hub</span>
+            </div>
+            <div class="user-controls">
+                <span id="user-display"></span>
+                <button id="logout-btn" class="btn"><i class="fa-solid fa-right-from-bracket"></i></button>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- Hero -->
+            <section class="hero">
+                <h1 class="gradient-text">SIH Hackathon Ideas</h1>
+                <p>Submit your most innovative ideas and vote for your favorites. You have exactly 2 votes to cast for the best projects!</p>
+            </section>
+
+            <!-- Top 3 Podium -->
+            <section class="podium-section">
+                <h2>Top Innovations</h2>
+                <div class="podium-container" id="podium-container">
+                    <!-- Skeletons -->
+                    <div class="podium-item rank-2"><div class="glass podium-card skeleton" style="height:240px"></div></div>
+                    <div class="podium-item rank-1"><div class="glass podium-card skeleton" style="height:280px"></div></div>
+                    <div class="podium-item rank-3"><div class="glass podium-card skeleton" style="height:200px"></div></div>
+                </div>
+            </section>
+
+            <!-- Charts -->
+            <section class="charts-section">
+                <div class="glass chart-card">
+                    <h3>Vote Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+                <div class="glass chart-card">
+                    <h3>Top 5 Overview</h3>
+                    <div class="chart-container">
+                        <canvas id="doughnutChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- All Ideas -->
+            <section class="ideas-section">
+                <div class="section-header">
+                    <h2>All Submissions</h2>
+                    <span id="vote-count-display" style="color: var(--text-muted); font-size: 0.9rem;"></span>
+                </div>
+                <div class="ideas-grid" id="ideas-grid">
+                    <!-- Skeletons -->
+                    <div class="glass idea-card skeleton" style="height: 200px;"></div>
+                    <div class="glass idea-card skeleton" style="height: 200px;"></div>
+                    <div class="glass idea-card skeleton" style="height: 200px;"></div>
+                </div>
+            </section>
+        </div>
+
+        <!-- FAB for Submit -->
+        <button class="fab" id="open-modal-btn" title="Submit Idea">
+            <i class="fa-solid fa-plus"></i>
+        </button>
+    </div>
+
+    <!-- Submit Modal -->
+    <div class="modal-overlay" id="submit-modal">
+        <div class="glass modal-card">
+            <div class="modal-header">
+                <h3>Submit New Idea</h3>
+                <button class="close-btn" id="close-modal-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="submit-form">
+                <div class="input-group">
+                    <input type="text" id="idea-title" placeholder="Idea Title" required maxlength="100">
+                </div>
+                <div class="input-group">
+                    <textarea id="idea-desc" placeholder="Describe your idea briefly..." required rows="4" maxlength="500"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;" id="submit-btn">Submit</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toasts -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        // Supabase Initialization
+        const supabaseUrl = 'https://dnvhpoyrnhevqyoyzrwi.supabase.co';
+        const supabaseKey = 'sb_publishable_1b9T-qHzNtDO3wiD9rCQwQ_hMUHiENd';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        // State
+        let currentUser = localStorage.getItem('sih_username') || '';
+        let ideasList = [];
+        let userVotes = [];
+        const MAX_VOTES = 2;
+
+        // Chart Instances
+        let barChartInstance = null;
+        let doughnutChartInstance = null;
+
+        // Chart.js Defaults for Dark Theme
+        Chart.defaults.color = 'rgba(255, 255, 255, 0.7)';
+        Chart.defaults.font.family = "'Inter', sans-serif";
+
+        // DOM Elements
+        const authScreen = document.getElementById('auth-screen');
+        const appContent = document.getElementById('app-content');
+        const loginForm = document.getElementById('login-form');
+        const usernameInput = document.getElementById('username-input');
+        const userDisplay = document.getElementById('user-display');
+        const logoutBtn = document.getElementById('logout-btn');
+        
+        const podiumContainer = document.getElementById('podium-container');
+        const ideasGrid = document.getElementById('ideas-grid');
+        const voteCountDisplay = document.getElementById('vote-count-display');
+        
+        const submitModal = document.getElementById('submit-modal');
+        const openModalBtn = document.getElementById('open-modal-btn');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const submitForm = document.getElementById('submit-form');
+        const submitBtn = document.getElementById('submit-btn');
+
+        // Init
+        function init() {
+            if (currentUser) {
+                showApp();
+            } else {
+                showAuth();
+            }
+        }
+
+        // Auth Functions
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = usernameInput.value.trim();
+            if (name) {
+                currentUser = name;
+                localStorage.setItem('sih_username', currentUser);
+                showApp();
+            }
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            currentUser = '';
+            localStorage.removeItem('sih_username');
+            showAuth();
+        });
+
+        function showAuth() {
+            authScreen.style.display = 'flex';
+            appContent.style.display = 'none';
+        }
+
+        function showApp() {
+            authScreen.style.display = 'none';
+            appContent.style.display = 'block';
+            userDisplay.innerHTML = `Hi, <strong>${currentUser}</strong>`;
+            
+            fetchData();
+            setupRealtime();
+        }
+
+        // Data Fetching
+        async function fetchData() {
+            try {
+                // Fetch User Votes
+                const { data: votesData, error: votesError } = await supabase
+                    .from('votes')
+                    .select('idea_id')
+                    .eq('voter_name', currentUser);
+                
+                if (votesError) throw votesError;
+                userVotes = votesData.map(v => v.idea_id);
+
+                // Fetch Ideas
+                const { data: ideasData, error: ideasError } = await supabase
+                    .from('ideas')
+                    .select('*')
+                    .order('votes', { ascending: false });
+
+                if (ideasError) throw ideasError;
+                ideasList = ideasData;
+
+                renderUI();
+            } catch (err) {
+                console.error("Error fetching data:", err);
+                showToast("Failed to load data", "error");
+            }
+        }
+
+        // Realtime Subscription
+        function setupRealtime() {
+            const ideasChannel = supabase.channel('custom-all-channel')
+                .on(
+                    'postgres_changes',
+                    { event: '*', schema: 'public', table: 'ideas' },
+                    (payload) => {
+                        fetchData(); // Refetch to keep simple and consistent
+                    }
+                )
+                .on(
+                    'postgres_changes',
+                    { event: '*', schema: 'public', table: 'votes' },
+                    (payload) => {
+                        // Only refetch if it affects current user or we just want latest counts
+                        fetchData();
+                    }
+                )
+                .subscribe();
+        }
+
+        // Render functions
+        function renderUI() {
+            updateVoteCountDisplay();
+            renderPodium();
+            renderIdeasGrid();
+            updateCharts();
+        }
+
+        function updateVoteCountDisplay() {
+            const remaining = MAX_VOTES - userVotes.length;
+            voteCountDisplay.innerHTML = `Votes remaining: <strong>${remaining}</strong>`;
+        }
+
+        function renderPodium() {
+            const top3 = ideasList.slice(0, 3);
+            podiumContainer.innerHTML = '';
+            
+            if (top3.length === 0) {
+                podiumContainer.innerHTML = '<p style="color: var(--text-muted)">No ideas submitted yet.</p>';
+                return;
+            }
+
+            // Order for podium: 2nd, 1st, 3rd visually
+            const orderMap = [1, 0, 2]; // Index 1 is 2nd place, Index 0 is 1st place, Index 2 is 3rd place
+            const ranks = ['🥈', '🥇', '🥉'];
+            const classes = ['rank-2', 'rank-1', 'rank-3'];
+
+            orderMap.forEach(idx => {
+                if(top3[idx]) {
+                    const idea = top3[idx];
+                    const div = document.createElement('div');
+                    div.className = `podium-item ${classes[idx]}`;
+                    div.innerHTML = `
+                        <div class="podium-rank">${ranks[idx]}</div>
+                        <div class="glass podium-card">
+                            <div>
+                                <div class="podium-title">${escapeHTML(idea.title)}</div>
+                                <div class="author">by ${escapeHTML(idea.submitted_by)}</div>
+                            </div>
+                            <div class="podium-votes">${idea.votes} <span style="font-size:0.8rem; font-weight:400; color:var(--text-muted)">votes</span></div>
+                        </div>
+                    `;
+                    podiumContainer.appendChild(div);
+                }
+            });
+        }
+
+        function renderIdeasGrid() {
+            ideasGrid.innerHTML = '';
+            if (ideasList.length === 0) {
+                ideasGrid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align:center;">No ideas found. Be the first to submit!</p>';
+                return;
+            }
+
+            ideasList.forEach(idea => {
+                const isVoted = userVotes.includes(idea.id);
+                const canVote = isVoted || userVotes.length < MAX_VOTES;
+                
+                const card = document.createElement('div');
+                card.className = 'glass idea-card';
+                card.innerHTML = `
+                    <div class="idea-title">${escapeHTML(idea.title)}</div>
+                    <div class="idea-desc">${escapeHTML(idea.description)}</div>
+                    <div class="idea-meta">
+                        <span class="author"><i class="fa-solid fa-user-circle"></i> ${escapeHTML(idea.submitted_by)}</span>
+                        <button class="vote-btn ${isVoted ? 'voted' : ''}" data-id="${idea.id}" ${!canVote && !isVoted ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>
+                            <i class="${isVoted ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
+                            <span>${idea.votes}</span>
+                        </button>
+                    </div>
+                `;
+                ideasGrid.appendChild(card);
+            });
+
+            // Attach vote listeners
+            document.querySelectorAll('.vote-btn').forEach(btn => {
+                btn.addEventListener('click', handleVote);
+            });
+        }
+
+        // Voting Logic
+        async function handleVote(e) {
+            const btn = e.currentTarget;
+            const ideaId = btn.getAttribute('data-id');
+            const isVoted = userVotes.includes(ideaId);
+
+            if (!isVoted && userVotes.length >= MAX_VOTES) {
+                showToast("You have used all your votes!", "warning");
+                return;
+            }
+
+            // Optimistic UI Update
+            btn.style.pointerEvents = 'none';
+            btn.style.opacity = '0.7';
+
+            try {
+                if (isVoted) {
+                    // Remove Vote
+                    await supabase.from('votes').delete().match({ voter_name: currentUser, idea_id: ideaId });
+                    await supabase.rpc('decrement_vote', { idea_row_id: ideaId });
+                    showToast("Vote removed");
+                } else {
+                    // Add Vote
+                    await supabase.from('votes').insert({ voter_name: currentUser, idea_id: ideaId });
+                    await supabase.rpc('increment_vote', { idea_row_id: ideaId });
+                    showToast("Vote cast! 💖");
+                }
+                // Refetch happens via realtime, but let's manual fetch to ensure consistency
+                await fetchData();
+            } catch (err) {
+                console.error("Voting error:", err);
+                showToast("Error processing vote", "error");
+                btn.style.pointerEvents = 'all';
+                btn.style.opacity = '1';
+            }
+        }
+
+        // Submit Idea Logic
+        openModalBtn.addEventListener('click', () => submitModal.classList.add('active'));
+        closeModalBtn.addEventListener('click', () => submitModal.classList.remove('active'));
+        
+        submitModal.addEventListener('click', (e) => {
+            if(e.target === submitModal) submitModal.classList.remove('active');
+        });
+
+        submitForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('idea-title').value.trim();
+            const desc = document.getElementById('idea-desc').value.trim();
+
+            if (!title || !desc) return;
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+
+            try {
+                const { error } = await supabase.from('ideas').insert({
+                    title: title,
+                    description: desc,
+                    submitted_by: currentUser
+                });
+
+                if (error) throw error;
+
+                showToast("Idea submitted successfully! 🎉");
+                submitModal.classList.remove('active');
+                submitForm.reset();
+                triggerConfetti();
+                // Data will refresh via realtime
+            } catch (err) {
+                console.error(err);
+                showToast("Error submitting idea", "error");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Submit';
+            }
+        });
+
+        // Charts
+        function updateCharts() {
+            const labels = ideasList.map(i => i.title.length > 15 ? i.title.substring(0,15)+'...' : i.title);
+            const data = ideasList.map(i => i.votes);
+
+            const bgColors = ideasList.map((_, i) => {
+                const hue = (i * 137.5) % 360; // Golden angle for distribution
+                return `hsla(${hue}, 70%, 60%, 0.6)`;
+            });
+            const borderColors = ideasList.map((_, i) => {
+                const hue = (i * 137.5) % 360;
+                return `hsla(${hue}, 70%, 60%, 1)`;
+            });
+
+            // Bar Chart (All)
+            const barCtx = document.getElementById('barChart').getContext('2d');
+            if (barChartInstance) barChartInstance.destroy();
+            
+            barChartInstance = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Votes',
+                        data: data,
+                        backgroundColor: 'rgba(108, 92, 231, 0.6)',
+                        borderColor: 'rgba(108, 92, 231, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                        x: { display: false } // Hide x labels if many ideas
+                    }
+                }
+            });
+
+            // Doughnut Chart (Top 5)
+            const top5Labels = labels.slice(0, 5);
+            const top5Data = data.slice(0, 5);
+            const doughnutCtx = document.getElementById('doughnutChart').getContext('2d');
+            
+            if (doughnutChartInstance) doughnutChartInstance.destroy();
+
+            doughnutChartInstance = new Chart(doughnutCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: top5Labels,
+                    datasets: [{
+                        data: top5Data,
+                        backgroundColor: bgColors.slice(0, 5),
+                        borderColor: 'rgba(36, 36, 62, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right' }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+
+        // Utils
+        function escapeHTML(str) {
+            const div = document.createElement('div');
+            div.innerText = str;
+            return div.innerHTML;
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            
+            let icon = 'fa-info-circle';
+            if(type === 'error') icon = 'fa-circle-exclamation';
+            if(type === 'warning') icon = 'fa-triangle-exclamation';
+            if(message.includes('🎉')) icon = 'fa-check-circle';
+
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i> ${message}`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideUpFade 0.3s ease-in reverse forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function triggerConfetti() {
+            // Simple CSS Confetti
+            for(let i=0; i<30; i++) {
+                const conf = document.createElement('div');
+                conf.style.position = 'fixed';
+                conf.style.width = '10px';
+                conf.style.height = '10px';
+                conf.style.backgroundColor = ['#ff6b6b', '#6c5ce7', '#ffd700', '#1dd1a1'][Math.floor(Math.random()*4)];
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.top = '-10px';
+                conf.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                conf.style.zIndex = '9999';
+                conf.style.pointerEvents = 'none';
+                
+                const duration = Math.random() * 2 + 1;
+                conf.style.transition = `top ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform ${duration}s linear`;
+                
+                document.body.appendChild(conf);
+                
+                setTimeout(() => {
+                    conf.style.top = '100vh';
+                    conf.style.transform = `rotate(${Math.random() * 720}deg)`;
+                }, 10);
+                
+                setTimeout(() => conf.remove(), duration * 1000);
+            }
+        }
+
+        // Start
+        init();
+
+    </script>
+</body>
+</html>
