@@ -674,6 +674,14 @@
                 </div>
             </section>
 
+            <!-- Vote Log -->
+            <section class="vote-log-section" style="margin-top: 3rem; margin-bottom: 4rem;">
+                <h2>Live Vote Feed</h2>
+                <div class="glass" id="vote-log-container" style="padding: 1.5rem; max-height: 250px; overflow-y: auto;">
+                    <p style="color: var(--text-muted);">Loading votes...</p>
+                </div>
+            </section>
+
             <!-- All Ideas -->
             <section class="ideas-section">
                 <div class="section-header">
@@ -727,6 +735,7 @@
         let currentUser = localStorage.getItem('sih_username') || '';
         let ideasList = [];
         let userVotes = [];
+        let allVotesFeed = [];
         const MAX_VOTES = 2;
 
         // Chart Instances
@@ -839,6 +848,14 @@
                 if (ideasError) throw ideasError;
                 ideasList = ideasData;
 
+                // Fetch All Votes for the feed
+                const { data: allVotesData } = await supabaseClient
+                    .from('votes')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (allVotesData) allVotesFeed = allVotesData;
+
                 renderUI();
             } catch (err) {
                 console.error("Error fetching data:", err);
@@ -873,6 +890,7 @@
             renderPodium();
             renderIdeasGrid();
             updateCharts();
+            renderVoteLog();
         }
 
         function updateVoteCountDisplay() {
@@ -911,6 +929,28 @@
                     `;
                     podiumContainer.appendChild(div);
                 }
+            });
+        }
+
+        function renderVoteLog() {
+            const container = document.getElementById('vote-log-container');
+            container.innerHTML = '';
+            
+            if (!allVotesFeed || allVotesFeed.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted);">No votes cast yet.</p>';
+                return;
+            }
+
+            allVotesFeed.forEach(vote => {
+                const idea = ideasList.find(i => i.id === vote.idea_id);
+                if (!idea) return;
+                
+                const div = document.createElement('div');
+                div.style.padding = '0.75rem 0';
+                div.style.borderBottom = '1px solid var(--glass-border)';
+                div.style.fontSize = '0.95rem';
+                div.innerHTML = `<i class="fa-solid fa-check-circle" style="color: #4cd137; margin-right: 0.5rem;"></i> <strong>${escapeHTML(vote.voter_name)}</strong> voted for <span style="color: var(--accent-start); font-weight: 500;">${escapeHTML(idea.title)}</span>`;
+                container.appendChild(div);
             });
         }
 
@@ -1089,12 +1129,13 @@
                     }]
                 },
                 options: {
+                    indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        y: { beginAtZero: true, ticks: { stepSize: 1 } },
-                        x: { display: true, ticks: { maxRotation: 90, minRotation: 90 } }
+                        x: { beginAtZero: true, ticks: { stepSize: 1 } },
+                        y: { display: true }
                     }
                 }
             });
