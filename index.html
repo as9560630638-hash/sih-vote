@@ -1094,7 +1094,7 @@
                     plugins: { legend: { display: false } },
                     scales: {
                         y: { beginAtZero: true, ticks: { stepSize: 1 } },
-                        x: { display: false } // Hide x labels if many ideas
+                        x: { display: true, ticks: { maxRotation: 90, minRotation: 90 } }
                     }
                 }
             });
