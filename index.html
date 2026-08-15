@@ -808,7 +808,7 @@
         async function fetchData() {
             try {
                 // Fetch User Votes
-                const { data: votesData, error: votesError } = await supabase
+                const { data: votesData, error: votesError } = await supabaseClient
                     .from('votes')
                     .select('idea_id')
                     .eq('voter_name', currentUser);
@@ -817,7 +817,7 @@
                 userVotes = votesData.map(v => v.idea_id);
 
                 // Fetch Ideas
-                const { data: ideasData, error: ideasError } = await supabase
+                const { data: ideasData, error: ideasError } = await supabaseClient
                     .from('ideas')
                     .select('*')
                     .order('votes', { ascending: false });
