@@ -604,11 +604,11 @@
         <div class="glass auth-card">
             <h2 class="gradient-text">SIH Idea Hub</h2>
             <p>Welcome! Please enter your name to continue.</p>
-            <form id="login-form">
+            <form id="login-form" onsubmit="handleLogin(event)">
                 <div class="input-group">
                     <input type="text" id="username-input" placeholder="Your Name" required autocomplete="off">
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Enter</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%;" id="login-btn">Enter</button>
             </form>
         </div>
     </div>
@@ -751,15 +751,38 @@
         }
 
         // Auth Functions
-        loginForm.addEventListener('submit', (e) => {
+        async function handleLogin(e) {
             e.preventDefault();
             const name = usernameInput.value.trim();
-            if (name) {
+            if (!name) return;
+
+            try {
+                const loginBtn = document.getElementById('login-btn');
+                loginBtn.disabled = true;
+                loginBtn.textContent = 'Checking...';
+
+                // Check if name already exists in votes or ideas to prevent duplicates
+                const { data: votesData } = await supabase.from('votes').select('voter_name').eq('voter_name', name).limit(1);
+                const { data: ideasData } = await supabase.from('ideas').select('submitted_by').eq('submitted_by', name).limit(1);
+
+                if ((votesData && votesData.length > 0) || (ideasData && ideasData.length > 0)) {
+                    showToast("Name already taken by another user.", "error");
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Enter';
+                    return;
+                }
+
                 currentUser = name;
                 localStorage.setItem('sih_username', currentUser);
                 showApp();
+                
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Enter';
+            } catch (err) {
+                console.error("Login error:", err);
+                showToast("Error during login", "error");
             }
-        });
+        }
 
         logoutBtn.addEventListener('click', () => {
             currentUser = '';
